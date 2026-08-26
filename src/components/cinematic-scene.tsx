@@ -8,6 +8,7 @@ import * as THREE from "three";
 
 type CinematicSceneProps = {
   progressRef: RefObject<number>;
+  activeChapter: number;
   compact: boolean;
   active: boolean;
   paused: boolean;
@@ -328,6 +329,7 @@ function KobeStation({ compact, onSelect }: { compact: boolean; onSelect: (index
 
 function Scene({
   progressRef,
+  activeChapter,
   compact,
   paused,
   onSelectProject,
@@ -341,7 +343,7 @@ function Scene({
       <Corridor compact={compact} />
       <PresentationControls
         global
-        enabled={!compact}
+        enabled={!compact && activeChapter >= 0 && activeChapter < 3}
         cursor
         snap
         speed={0.35}

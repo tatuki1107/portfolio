@@ -303,6 +303,7 @@ export function PortfolioExperience() {
                   {webGLSupported === true ? (
                     <CinematicScene
                       progressRef={progressRef}
+                      activeChapter={activeChapter}
                       compact={compact}
                       active={sceneVisible}
                       paused={scenePaused}
