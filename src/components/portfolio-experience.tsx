@@ -1,33 +1,35 @@
 "use client";
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Code2,
-  Mail,
-  Pause,
-  Play,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { type Project, projects } from "@/data/projects";
+import Image from "next/image";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from "motion/react";
+import { ArrowDown, ArrowUpRight, Code2, Mail, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { additionalProjects, featuredProjects, type Project, projects } from "@/data/projects";
 
-const SOUND_STORAGE_KEY = "portfolio-sound:v1";
-const HologramScene = dynamic(
-  () => import("@/components/hologram-scene").then((module) => module.HologramScene),
-  {
-    ssr: false,
-    loading: () => <div className="scene-loading">立体作品を読み込んでいます</div>,
-  },
+const CinematicScene = dynamic(
+  () => import("@/components/cinematic-scene").then((module) => module.CinematicScene),
+  { ssr: false, loading: () => <div className="scene-loading"><span />FACILITY LOADING</div> },
 );
 
-const featuredProjects = projects.filter((project) => project.featured);
-const additionalProjects = projects.filter((project) => !project.featured);
+class SceneErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("The 3D facility could not be rendered.", error, info);
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
@@ -41,62 +43,111 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
+function useWebGLSupport() {
+  const [supported, setSupported] = useState<boolean | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const canvas = document.createElement("canvas");
+        setSupported(Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl")));
+      } catch {
+        setSupported(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return supported;
+}
+
 function useInterfaceSound() {
   const [enabled, setEnabled] = useState(false);
   const contextRef = useRef<AudioContext | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setEnabled(window.localStorage.getItem(SOUND_STORAGE_KEY) === "on");
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const play = useCallback(
-    (tone: "tick" | "open") => {
-      if (!enabled) return;
-      const context = contextRef.current ?? new AudioContext();
-      contextRef.current = context;
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const now = context.currentTime;
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(tone === "open" ? 180 : 760, now);
-      oscillator.frequency.exponentialRampToValueAtTime(tone === "open" ? 640 : 420, now + 0.09);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.045, now + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.13);
-    },
-    [enabled],
-  );
+  const play = useCallback((kind: "step" | "open") => {
+    const context = contextRef.current;
+    if (!enabled || !context || context.state !== "running") return;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    oscillator.type = kind === "open" ? "triangle" : "sine";
+    oscillator.frequency.setValueAtTime(kind === "open" ? 118 : 510, now);
+    oscillator.frequency.exponentialRampToValueAtTime(kind === "open" ? 238 : 410, now + 0.11);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.028, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.15);
+  }, [enabled]);
 
   const toggle = () => {
     const next = !enabled;
+    if (next) {
+      const context = contextRef.current ?? new AudioContext();
+      contextRef.current = context;
+      void context.resume();
+    }
     setEnabled(next);
-    window.localStorage.setItem(SOUND_STORAGE_KEY, next ? "on" : "off");
   };
 
   return { enabled, play, toggle };
 }
 
+function ProjectVisual({ project, priority = false }: { project: Project; priority?: boolean }) {
+  if (project.media) {
+    return (
+      <Image
+        src={project.media}
+        alt={project.mediaAlt ?? project.titleJa}
+        fill
+        priority={priority}
+        sizes="(max-width: 760px) 94vw, 42vw"
+        unoptimized={project.media.endsWith(".gif")}
+      />
+    );
+  }
+  return (
+    <div className={`generated-visual visual-${project.visualVariant}`} aria-hidden="true">
+      <span /><span /><span /><span />
+    </div>
+  );
+}
+
 function ProjectPanel({ project, onClose }: { project: Project; onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !panelRef.current) return;
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKey);
+    window.addEventListener("keydown", onKeyDown);
     panelRef.current?.focus();
     return () => {
       document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("keydown", onKeyDown);
       previous?.focus();
     };
   }, [onClose]);
@@ -115,55 +166,31 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 32, stiffness: 250 }}
+        transition={{ type: "spring", stiffness: 260, damping: 34 }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`project-title-${project.id}`}
         tabIndex={-1}
       >
-        <button className="panel-close" onClick={onClose} aria-label="詳細を閉じる">
-          <X size={22} /><span>CLOSE</span>
-        </button>
-        <div className="panel-sequence">PROJECT {project.index}</div>
-        <p className="eyebrow acid">{project.category}</p>
+        <div className="panel-topline">
+          <span>PROJECT / {project.index}</span>
+          <button onClick={onClose} aria-label="詳細を閉じる"><X size={20} /> CLOSE</button>
+        </div>
+        <p className="system-label">{project.chapter}</p>
         <h2 id={`project-title-${project.id}`}>{project.title}</h2>
-        <p className="panel-title-ja">{project.titleJa}</p>
-
-        {project.media ? (
-          <div className="panel-media">
-            <Image
-              src={project.media}
-              alt={project.mediaAlt ?? project.titleJa}
-              fill
-              sizes="(max-width: 760px) 100vw, 58vw"
-              unoptimized={project.media.endsWith(".gif")}
-            />
-            <span className="media-tag">PHOTO / DEMO</span>
-          </div>
-        ) : (
-          <div className="panel-media generative-media" aria-hidden="true">
-            <div className="signal-disc" />
-            <span className="media-tag">PROJECT IMAGE / {project.id.toUpperCase()}</span>
-          </div>
-        )}
-
-        <div className="panel-copy-grid">
-          <div>
-            <p className="micro-label">OVERVIEW</p>
-            <p className="panel-detail">{project.detail}</p>
-          </div>
-          <div>
-            <p className="micro-label">MY ROLE</p>
-            <ul className="role-list">
-              {project.role.map((role) => <li key={role}>{role}</li>)}
-            </ul>
-          </div>
+        <p className="panel-ja">{project.titleJa}</p>
+        <div className="panel-media"><ProjectVisual project={project} /></div>
+        {project.metric ? <strong className="panel-metric">{project.metric}</strong> : null}
+        <div className="panel-copy">
+          <div><span>OVERVIEW</span><p>{project.detail}</p></div>
+          <div><span>DESIGN DECISION</span><p>{project.decision}</p></div>
         </div>
-
-        <div className="tech-list">
-          {project.technologies.map((technology) => <span key={technology}>{technology}</span>)}
+        <div className="panel-role">
+          <span>RESPONSIBILITY</span>
+          <ul>{project.role.map((role) => <li key={role}>{role}</li>)}</ul>
         </div>
-        {project.links.length > 0 && (
+        <div className="tech-list">{project.technologies.map((item) => <span key={item}>{item}</span>)}</div>
+        {project.links.length > 0 ? (
           <div className="panel-links">
             {project.links.map((link) => (
               <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
@@ -171,174 +198,202 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
               </a>
             ))}
           </div>
-        )}
+        ) : null}
       </motion.div>
     </motion.div>
   );
 }
 
+function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
+  return (
+    <section className="static-cinematic" id="top">
+      <div className="static-intro">
+        <p className="system-label">TATSUKI KUWANO / PORTFOLIO 2026</p>
+        <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
+        <p>AR・AI・Web・3Dを横断し、画面の外へ続く体験を設計・実装しています。</p>
+      </div>
+      <div className="static-featured">
+        {featuredProjects.map((project) => (
+          <article key={project.id}>
+            <div className="static-media"><ProjectVisual project={project} /></div>
+            <p className="system-label">{project.chapter}</p>
+            <h2>{project.title}</h2>
+            <p>{project.summary}</p>
+            <button onClick={() => onOpen(project)}>PROJECT DETAIL <ArrowUpRight size={16} /></button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function PortfolioExperience() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [hoveredProjectIndex, setHoveredProjectIndex] = useState<number | null>(null);
+  const [activeChapter, setActiveChapter] = useState(-1);
+  const [sceneVisible, setSceneVisible] = useState(true);
   const [scenePaused, setScenePaused] = useState(false);
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const cinematicRef = useRef<HTMLElement>(null);
+  const progressRef = useRef(0);
   const compact = useMediaQuery("(max-width: 760px), (pointer: coarse)");
-  const { scrollYProgress } = useScroll();
-  const scrollScale = useSpring(scrollYProgress, { stiffness: 120, damping: 28 });
-  const sound = useInterfaceSound();
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const webGLSupported = useWebGLSupport();
+  const { enabled: soundEnabled, play: playSound, toggle: toggleSound } = useInterfaceSound();
+  const { scrollY, scrollYProgress } = useScroll();
+  const pageProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 28 });
 
-  const openProject = (project: Project) => {
-    sound.play("open");
+  const openProject = useCallback((project: Project) => {
+    playSound("open");
     setSelectedProject(project);
-  };
+  }, [playSound]);
+
+  useMotionValueEvent(scrollY, "change", (scrollTop) => {
+    const cinematic = cinematicRef.current;
+    if (!cinematic) return;
+    const scrollDistance = Math.max(cinematic.offsetHeight - window.innerHeight, 1);
+    const value = Math.min(Math.max((scrollTop - cinematic.offsetTop) / scrollDistance, 0), 1);
+    progressRef.current = value;
+    const next = value < 0.12 ? -1 : value < 0.36 ? 0 : value < 0.61 ? 1 : value < 0.86 ? 2 : 3;
+    setActiveChapter((current) => {
+      if (current === next) return current;
+      playSound("step");
+      return next;
+    });
+  });
+
+  useEffect(() => {
+    const element = cinematicRef.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setSceneVisible(entry.isIntersecting),
+      { rootMargin: "120px 0px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const useStaticExperience = reducedMotion || webGLSupported === false;
+  const chapterProject = activeChapter >= 0 && activeChapter < 3 ? featuredProjects[activeChapter] : null;
 
   return (
     <div className="site-shell">
-      <motion.div className="scroll-progress" style={{ scaleX: scrollScale }} />
-      <div className="page-noise" aria-hidden="true" />
+      <motion.div className="page-progress" style={{ scaleX: pageProgress }} />
+      <div className="grain" aria-hidden="true" />
 
       <header className="site-header">
-        <a href="#top" className="identity-mark" aria-label="ページ先頭へ">
-          <span>Tatsuki</span><small>Kuwano / Portfolio</small>
-        </a>
-        <nav aria-label="メインナビゲーション">
-          <a href="#works">WORKS</a><a href="#profile">PROFILE</a><a href="#contact">CONTACT</a>
-        </nav>
-        <div className="header-actions">
-          <button
-            type="button"
-            className="icon-action"
-            onClick={() => setScenePaused((value) => !value)}
-            aria-label={scenePaused ? "3Dアニメーションを再開" : "3Dアニメーションを停止"}
-          >
-            {scenePaused ? <Play size={16} /> : <Pause size={16} />}
+        <a className="site-id" href="#top" aria-label="ページ先頭へ"><b>TK</b><span>EXPERIENCE ENGINEER</span></a>
+        <nav aria-label="メインナビゲーション"><a href="#works">WORKS</a><a href="#profile">PROFILE</a><a href="#contact">CONTACT</a></nav>
+        <div className="header-controls">
+          <button onClick={() => setScenePaused((value) => !value)} aria-label={scenePaused ? "3Dアニメーションを再開" : "3Dアニメーションを停止"}>
+            {scenePaused ? <Play size={15} /> : <Pause size={15} />}
           </button>
-          <button
-            type="button"
-            className="sound-action"
-            onClick={sound.toggle}
-            aria-label={sound.enabled ? "操作音をオフ" : "操作音をオン"}
-          >
-            {sound.enabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            <span>音 {sound.enabled ? "あり" : "なし"}</span>
+          <button onClick={toggleSound} aria-label={soundEnabled ? "操作音をオフ" : "操作音をオン"}>
+            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>SOUND</span>
           </button>
         </div>
       </header>
 
       <main>
-        <section className="hero" id="top">
-          <div className="hero-canvas" aria-hidden="true">
-            <HologramScene
-              reducedMotion={reducedMotion || scenePaused}
-              compact={compact}
-              onHoverProject={setHoveredProjectIndex}
-              onSelectProject={(index) => openProject(projects[index])}
-            />
-          </div>
-          <div className="hero-3d-note" aria-hidden="true">
-            <span>INTERACTIVE PROJECT ISLAND</span>
-            <strong>DRAG WORLD / CLICK OBJECTS</strong>
-          </div>
-          <div className="hero-project-callout" aria-live="polite">
-            {hoveredProjectIndex === null ? (
-              <><small>3D PROJECT MAP</small><strong>7つの作品を巡る</strong></>
-            ) : (
-              <><small>PROJECT {projects[hoveredProjectIndex].index}</small><strong>{projects[hoveredProjectIndex].title}</strong></>
-            )}
-          </div>
-          <div className="hero-content">
-            <p className="eyebrow"><span /> PORTFOLIO / 2026</p>
-            <h1><span>TATSUKI</span><span className="outline-word">KUWANO</span></h1>
-            <div className="hero-bottom">
-              <p className="hero-statement">
-                AR・AI・Webを横断し、<br /><strong>画面の外へ続く体験</strong>をつくる。
-              </p>
-              <a href="#works" className="down-link"><span>作品を見る</span><ArrowDownRight size={25} /></a>
-            </div>
-          </div>
-          <div className="hero-index" aria-hidden="true">KOBE / JAPAN</div>
-        </section>
+        {useStaticExperience ? (
+          <StaticCinematic onOpen={openProject} />
+        ) : (
+          <SceneErrorBoundary fallback={<StaticCinematic onOpen={openProject} />}>
+            <section className="cinematic" id="top" ref={cinematicRef}>
+              <div className="cinematic-sticky">
+                <div className="cinematic-canvas" aria-hidden="true">
+                  {webGLSupported === true ? (
+                    <CinematicScene
+                      progressRef={progressRef}
+                      compact={compact}
+                      active={sceneVisible}
+                      paused={scenePaused}
+                      onSelectProject={(index) => openProject(projects[index])}
+                    />
+                  ) : <div className="scene-loading"><span />FACILITY LOADING</div>}
+                </div>
+
+                <div className="cinematic-ui">
+                  <div className="facility-coordinate"><span>FACILITY 34°41&apos;N</span><span>SCROLL / NATIVE CONTROL</span></div>
+                  <AnimatePresence mode="wait">
+                    {activeChapter === -1 ? (
+                      <motion.div className="cinematic-intro" key="intro" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                        <p className="system-label">TATSUKI KUWANO / PORTFOLIO 2026</p>
+                        <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
+                        <p className="intro-copy">AR・AI・Web・3Dを横断し、<br />画面の外へ続く体験を設計・実装しています。</p>
+                        <div className="scroll-cue"><ArrowDown size={17} /><span>SCROLL TO ENTER FACILITY</span></div>
+                      </motion.div>
+                    ) : chapterProject ? (
+                      <motion.article className="chapter-card" key={chapterProject.id} initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}>
+                        <div className="chapter-copy">
+                          <p className="system-label">CHAPTER {chapterProject.index} / {chapterProject.chapter}</p>
+                          <h2>{chapterProject.title}</h2>
+                          <h3>{chapterProject.titleJa}</h3>
+                          <p>{chapterProject.summary}</p>
+                          <div className="chapter-spec"><span>{chapterProject.metric}</span><span>{chapterProject.year}</span></div>
+                          <button onClick={() => openProject(chapterProject)}>OPEN PROJECT <ArrowUpRight size={16} /></button>
+                        </div>
+                        <div className="chapter-media"><ProjectVisual project={chapterProject} priority={activeChapter === 0} /><span>DOCUMENT / {chapterProject.index}</span></div>
+                      </motion.article>
+                    ) : (
+                      <motion.div className="cinematic-outro" key="outro" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <p className="system-label">FACILITY TOUR COMPLETE</p>
+                        <h2>MORE WORK<br />BELOW.</h2>
+                        <a href="#works">CONTINUE <ArrowDown size={17} /></a>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="chapter-rail" aria-hidden="true">
+                    {featuredProjects.map((project, index) => <span key={project.id} className={activeChapter === index ? "active" : ""}>{project.index}</span>)}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </SceneErrorBoundary>
+        )}
 
         <section className="works-section" id="works">
-          <div className="section-heading">
-            <p className="eyebrow acid">SELECTED WORKS</p>
-            <h2>選んだ<br />仕事と実験</h2>
-            <p className="section-intro">
-              課題から技術を選ぶ。<br />技術から体験を組み立てる。<br />
-              <span>それぞれの制作背景と担当領域を紹介します。</span>
-            </p>
-          </div>
-          <div className="project-list">
-            {featuredProjects.map((project) => (
-              <button
-                key={project.id}
-                type="button"
-                className="project-row"
-                onMouseEnter={() => sound.play("tick")}
-                onFocus={() => sound.play("tick")}
-                onClick={() => openProject(project)}
-              >
-                <span className="project-index">{project.index}</span>
-                <span className="project-meta"><small>{project.category}</small><small>{project.year}</small></span>
-                <span className="project-name"><strong>{project.title}</strong><em>{project.titleJa}</em></span>
-                <span className="project-arrow"><ArrowUpRight /></span>
+          <div className="section-kicker"><span>04—08</span><p>ADDITIONAL WORK / FIELD RECORDS</p></div>
+          <div className="works-heading"><h2>実装の幅を、<br />結果で見せる。</h2><p>企業・個人・チーム制作を横断し、要件から運用まで必要な場所を担当してきました。</p></div>
+          <div className="work-records">
+            {additionalProjects.map((project) => (
+              <button key={project.id} onClick={() => openProject(project)}>
+                <span className="record-index">{project.index}</span>
+                <span className="record-title"><small>{project.category}</small><strong>{project.title}</strong><em>{project.titleJa}</em></span>
+                {project.metric ? <span className="record-metric">{project.metric}</span> : <span />}
+                <span className="record-arrow"><ArrowUpRight size={19} /></span>
               </button>
             ))}
-          </div>
-          <div className="additional-work">
-            <p className="micro-label">そのほかの制作</p>
-            <div>
-              {additionalProjects.map((project) => (
-                <button key={project.id} type="button" onClick={() => openProject(project)}>
-                  <span>{project.index}</span><strong>{project.titleJa}</strong><ArrowUpRight size={17} />
-                </button>
-              ))}
-            </div>
           </div>
         </section>
 
         <section className="profile-section" id="profile">
-          <div className="profile-lead">
-            <p className="eyebrow acid">PROFILE</p>
-            <h2>未知の技術に、<br /><span>まず触れる。</span></h2>
-          </div>
+          <div className="profile-heading"><p className="system-label">OPERATOR PROFILE / 2026</p><h2>技術を横断し、<br /><span>体験を最後までつくる。</span></h2></div>
           <div className="profile-grid">
-            <div className="profile-copy">
-              <p className="profile-name-en">TATSUKI KUWANO</p><h3>桑野 樹希</h3>
-              <p>KADOKAWAドワンゴ情報工科学院 大学部所属。ARを軸に、AI、Web、3Dを組み合わせた体験づくりに取り組んでいます。</p>
-              <p>個人制作からチーム開発、企業・自治体に関わるプロジェクトまで経験。要件定義、バックエンド、管理画面、データ可視化、3D制作を横断します。</p>
-            </div>
-            <div className="capability-matrix">
+            <div className="profile-bio"><small>TATSUKI KUWANO</small><h3>桑野 樹希</h3><p>KADOKAWAドワンゴ情報工科学院 大学部所属。ARを軸に、AI、Web、3Dを組み合わせた体験づくりに取り組んでいます。</p><p>個人制作からチーム開発、企業・自治体プロジェクトまで経験。要件定義、バックエンド、管理画面、データ可視化、3D制作を横断します。</p></div>
+            <div className="capabilities">
               {[
-                ["01", "EXPERIENCE", "AR / 3D / Interactive"],
+                ["01", "SPATIAL", "AR / 3D / Interactive"],
                 ["02", "INTELLIGENCE", "LLM / Voice / Memory"],
                 ["03", "SYSTEM", "Backend / Database / Docker"],
-                ["04", "INTERFACE", "Web / Dashboard / Data viz"],
-              ].map(([number, label, detail]) => (
-                <div key={number}><span>{number}</span><strong>{label}</strong><small>{detail}</small></div>
-              ))}
+                ["04", "INTERFACE", "Web / Dashboard / Data Viz"],
+              ].map(([number, name, detail]) => <div key={number}><span>{number}</span><strong>{name}</strong><small>{detail}</small></div>)}
             </div>
           </div>
-          <div className="ticker" aria-hidden="true"><div>AR — AI — WEB — 3D — BACKEND — EXPERIENCE — AR — AI — WEB — 3D —</div></div>
         </section>
 
         <section className="contact-section" id="contact">
-          <p className="eyebrow">CONTACT</p>
-          <h2>一緒に、<br /><span>まだない景色を。</span></h2>
-          <p>展示、実験、プロダクト。まだ形のない体験について話しましょう。</p>
+          <p className="system-label">OPEN COMMUNICATION CHANNEL</p>
+          <h2>まだない体験を、<br /><span>一緒につくる。</span></h2>
+          <p>展示、実験、プロダクト。アイデアを実際に触れられるところまで持っていきます。</p>
           <div className="contact-links">
-            <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={21} />メールを送る<ArrowUpRight size={21} /></a>
-            <a href="https://github.com/tatuki1107" target="_blank" rel="noreferrer"><Code2 size={21} />GITHUB<ArrowUpRight size={21} /></a>
+            <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={20} />メールを送る<ArrowUpRight size={20} /></a>
+            <a href="https://github.com/tatuki1107" target="_blank" rel="noreferrer"><Code2 size={20} />GitHubを見る<ArrowUpRight size={20} /></a>
           </div>
-          <footer>
-            <span>© 2026 TATSUKI KUWANO</span><span>BUILT WITH NEXT.JS + THREE.JS</span><a href="#top">BACK TO TOP ↑</a>
-          </footer>
+          <footer><span>© 2026 TATSUKI KUWANO</span><span>THREE.JS / NEXT.JS</span><a href="#top">BACK TO TOP ↑</a></footer>
         </section>
       </main>
 
-      <AnimatePresence>
-        {selectedProject && <ProjectPanel project={selectedProject} onClose={() => setSelectedProject(null)} />}
-      </AnimatePresence>
+      <AnimatePresence>{selectedProject ? <ProjectPanel project={selectedProject} onClose={() => setSelectedProject(null)} /> : null}</AnimatePresence>
     </div>
   );
 }

@@ -1,19 +1,33 @@
 export type ProjectLink = { label: string; href: string };
 
+export type ProjectVisual =
+  | "communication"
+  | "ar-gate"
+  | "night-city"
+  | "analytics"
+  | "memory"
+  | "community"
+  | "collaboration"
+  | "xreal";
+
 export type Project = {
   id: string;
   index: string;
+  chapter: string;
   title: string;
   titleJa: string;
   category: string;
-  year: string;
+  year?: string;
   summary: string;
   detail: string;
+  decision: string;
   role: string[];
   technologies: string[];
+  metric?: string;
   media?: string;
   mediaAlt?: string;
-  featured: boolean;
+  visualVariant: ProjectVisual;
+  featuredRank?: 1 | 2 | 3;
   links: ProjectLink[];
 };
 
@@ -21,48 +35,79 @@ export const projects: Project[] = [
   {
     id: "yui-ai",
     index: "01",
-    title: "YUI / 3D CONVERSATIONAL AI",
+    chapter: "SIGNAL / VOICE",
+    title: "YUI",
     titleJa: "3Dモデル対話AI",
-    category: "AI × 3D × VOICE",
+    category: "VOICE × AI × 3D",
     year: "2025",
-    summary: "声を聞き、考え、3Dキャラクターとして応答する。文化祭のために一人で組み上げた対話体験。",
-    detail: "来場者がマイクで話しかけると、音声認識・LLM・音声合成を経て3Dキャラクターが応答する受付システムです。展示空間で迷わず使えることを重視し、フロントエンド、3D表示、バックエンド、Docker構成まで一貫して設計しました。",
-    role: ["企画・体験設計", "3D実装", "フロントエンド", "バックエンド"],
-    technologies: ["React", "TypeScript", "Babylon.js", "OpenAI API", "VOICEVOX", "Docker"],
+    summary: "声を聞き、考え、3Dキャラクターとして返す。文化祭の受付を、会話そのものが体験になる場所へ変えました。",
+    detail: "来場者の音声をfaster-whisperで認識し、GPT-4o-miniの応答をVOICEVOXで発話。Babylon.js上の3Dキャラクターへ接続したリアルタイム対話システムです。React、Express、Python API、Docker構成まで一人で組み上げ、会話ログ保存とLINEへのエラー通知も含めて展示運用できる状態にしました。",
+    decision: "展示会場で説明なしでも使えるよう、マイク操作から応答までを一本の体験に統合。複数サービスはDocker Composeで再現可能にしました。",
+    role: ["企画・体験設計", "3Dフロントエンド", "音声／対話API", "Docker・展示運用"],
+    technologies: ["React", "TypeScript", "Babylon.js", "faster-whisper", "OpenAI API", "VOICEVOX", "Docker"],
+    metric: "END-TO-END / SOLO BUILD",
     media: "/media/yui-demo.gif",
-    mediaAlt: "3Dモデル対話AIのデモ画面",
-    featured: true,
+    mediaAlt: "文化祭で稼働した3Dモデル対話AI YUIの画面",
+    visualVariant: "communication",
+    featuredRank: 1,
     links: [{ label: "GitHub", href: "https://github.com/tatuki1107/bunkasaichatAI" }],
   },
   {
     id: "webar",
     index: "02",
+    chapter: "LAYER / SPACE",
     title: "WEB AR MUSEUM",
     titleJa: "画像認識Web ARミュージアム",
     category: "WEB AR × EXHIBITION",
     year: "2024",
-    summary: "画像を入口に、現実空間へ3Dモデルを呼び出す。企画から公開まで個人で制作したWeb AR展示。",
-    detail: "スマートフォンのカメラで登録画像を認識し、対応する3Dモデルを現実空間へ表示します。複数マーカー、アニメーション付きglTF、展示紹介画面まで制作し、文化祭で来場者が体験できる状態まで公開しました。",
-    role: ["個人制作", "AR体験設計", "3Dアセット組み込み", "公開運用"],
-    technologies: ["MindAR.js", "A-Frame", "JavaScript", "glTF / GLB"],
-    featured: true,
+    summary: "印刷物を入口に、現実空間へ3D作品を呼び出す。インストール不要のAR展示を個人で公開しました。",
+    detail: "スマートフォンのカメラで登録画像を認識し、対応する3Dモデルを現実空間へ重ねるWeb AR作品です。複数マーカー、アニメーション付きglTF、展示紹介画面を実装し、文化祭で来場者がその場でアクセスできる形にしました。",
+    decision: "専用アプリを要求せず体験へ入れることを優先し、MindAR.jsとA-Frameを採用。URLを開いてカメラを向けるだけの導線にしました。",
+    role: ["個人制作", "AR体験設計", "3Dアセット組み込み", "GitHub Pages公開"],
+    technologies: ["MindAR.js", "A-Frame", "JavaScript", "glTF / GLB", "Web Camera"],
+    metric: "INSTALL-FREE AR",
+    visualVariant: "ar-gate",
+    featuredRank: 2,
     links: [
       { label: "Live demo", href: "https://tatuki1107.github.io/WebAR/" },
       { label: "GitHub", href: "https://github.com/tatuki1107/WebAR" },
     ],
   },
   {
-    id: "egographica",
+    id: "kobe-night",
     index: "03",
+    chapter: "ROUTE / CITY",
+    title: "YORU NO TOBIRA",
+    titleJa: "神戸ナイトタイムエコノミー",
+    category: "CITY × AI CONCIERGE",
+    year: "2026",
+    summary: "検索結果ではなく、今夜歩きたくなる理由を返す。神戸の高架下周辺へ人を誘う観光コンシェルジュです。",
+    detail: "ArtFanders Inc.でのインターンシップを通じ、神戸市からの依頼で制作されたAI観光コンシェルジュの開発に参加しました。気分や地元ならではの視点から夜の街を提案し、周辺の回遊につなげる体験を目指しています。",
+    decision: "観光地の一覧表示ではなく、利用者の状況から次の行動へつなぐ会話体験を重視。実際の利用場面を想定してアプリケーションUIを実装しました。",
+    role: ["アプリケーション開発", "UI実装", "体験設計への参加"],
+    technologies: ["Web Application", "AI", "Tourism", "UX"],
+    metric: "KOBE CITY PROJECT",
+    media: "/media/kobe-01.png",
+    mediaAlt: "神戸ナイトタイムエコノミーの利用画面",
+    visualVariant: "night-city",
+    featuredRank: 3,
+    links: [{ label: "Visit site", href: "https://yorunotobira.com/" }],
+  },
+  {
+    id: "egographica",
+    index: "04",
+    chapter: "ART / OPERATIONS",
     title: "EGO GRAPHICA",
     titleJa: "アーティストとAIで対話するアートテック",
-    category: "ART × AI × DATA",
+    category: "ART × DATA × OPERATIONS",
     year: "2026",
-    summary: "現代アーティストとAIを介して対話するサービス。その運用を支える管理画面と分析基盤を開発。",
-    detail: "ArtFanders株式会社が提供するアートテックプラットフォームに、バックエンド／アプリケーション開発として参加しました。会話数、売上、コイン消費、CV率、アーティスト別ランキングを可視化し、実運用とマーケティング判断を支える管理画面を実装しました。",
+    summary: "アートとの対話を事業として運用するため、数字の向こうにある利用状況を見える形にしました。",
+    detail: "ArtFanders株式会社のアートテックプラットフォームにバックエンド／アプリケーション開発として参加。会話数、売上、コイン消費、CV率、アーティスト別ランキングを扱う管理画面とCRM分析機能を実装しました。",
+    decision: "運用担当者が期間やアーティストを切り替えながら判断できるよう、分析指標と絞り込みを一つの管理画面へ集約しました。",
     role: ["管理画面", "CRM分析", "データ可視化", "運用支援機能"],
     technologies: ["Backend", "Dashboard", "Analytics", "CRM"],
-    featured: true,
+    metric: "BUSINESS OPERATIONS",
+    visualVariant: "analytics",
     links: [
       { label: "Official", href: "https://egographica.art/" },
       { label: "App", href: "https://app.egographica.art/" },
@@ -70,63 +115,73 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: "kobe-night",
-    index: "04",
-    title: "YORU NO TOBIRA",
-    titleJa: "神戸ナイトタイムエコノミー",
-    category: "CITY × AI CONCIERGE",
-    year: "2026",
-    summary: "神戸の夜を、AIとの会話から歩き出す。高架下周辺の回遊を促す観光コンシェルジュ。",
-    detail: "ArtFanders Inc.とのインターンシップを通じ、神戸市からの依頼で制作されたAI観光コンシェルジュの開発に参加しました。観光地の検索ではなく、その時の気分や地元の視点から夜の街を歩きたくなる体験を目指しています。",
-    role: ["アプリケーション開発", "UI実装", "体験設計への参加"],
-    technologies: ["Web Application", "AI", "Tourism", "UX"],
-    media: "/media/kobe-01.png",
-    mediaAlt: "神戸ナイトタイムエコノミーのユースケース画面",
-    featured: true,
-    links: [{ label: "Visit site", href: "https://yorunotobira.com/" }],
-  },
-  {
     id: "discord-bot",
     index: "05",
+    chapter: "MEMORY / LOCAL",
     title: "SILVER HAIRED AI BOT",
     titleJa: "銀髪ロング美少女 Discord Bot",
     category: "LOCAL LLM × MEMORY",
     year: "2026",
-    summary: "人格、短期記憶、長期記憶を持ち、会話から成長するローカルLLM搭載Discord Bot。",
-    detail: "Ollamaを利用したローカルLLMにキャラクター人格を与え、Discord上で自然な会話を行うBotです。ストリーミングによる高速応答、直近会話の短期記憶、要約とEmbeddingを用いた長期記憶を組み合わせています。",
+    summary: "会話を忘れないキャラクターを、ローカルLLMと二層の記憶で設計しました。",
+    detail: "Ollamaで動かすローカルLLMに人格を与え、Discord上で会話するBotです。直近履歴を扱う短期記憶と、要約・Embeddingを用いる長期記憶を組み合わせ、ストリーミング応答にも対応しました。",
+    decision: "応答速度と文脈保持を両立するため、すべての履歴を毎回渡さず、短期履歴と検索可能な長期記憶へ分離しました。",
     role: ["個人開発", "会話設計", "記憶アーキテクチャ", "ストリーミング"],
     technologies: ["Ollama", "Discord", "Embedding", "Streaming"],
+    metric: "1–2 SEC TO FIRST TOKEN",
     media: "/media/discord-bot.png",
-    mediaAlt: "Discord上で動作する会話AI Bot",
-    featured: true,
+    mediaAlt: "Discord上で動作するローカルLLM搭載Bot",
+    visualVariant: "memory",
+    links: [],
+  },
+  {
+    id: "xreal-shooter",
+    index: "06",
+    chapter: "AR GLASSES / EXHIBITION",
+    title: "XREAL SHOOTING EXPERIENCE",
+    titleJa: "ARグラス シューティング展示",
+    category: "XREAL × INTERACTIVE",
+    summary: "ARグラスを使ったシューティングゲームを卒業展示会へ出展し、来場者の約40%が体験しました。",
+    detail: "XREALを使用したシューティングゲームを制作し、卒業展示会の在校生展示物として公開しました。来場者の約40%に体験してもらった、装着型デバイスを用いるインタラクティブ展示です。",
+    decision: "公開プロフィールで確認できる事実だけを掲載し、使用エンジンや未確認の技術構成は記載していません。",
+    role: ["制作", "体験設計", "展示"],
+    technologies: ["XREAL", "AR", "Interactive Experience"],
+    metric: "≈40% OF VISITORS",
+    visualVariant: "xreal",
     links: [],
   },
   {
     id: "motekatu",
-    index: "06",
+    index: "07",
+    chapter: "TEAM / WEB",
     title: "MOTEKATU",
     titleJa: "レビュー共有プラットフォーム",
     category: "TEAM DEVELOPMENT",
     year: "2024",
-    summary: "“モテるための活動”を題材に、ユーザーのレビューを集約するWebアプリ。",
-    detail: "Djangoを用いたチーム開発に参加。静的HTMLをWebアプリとして動作させるための改修を中心に担当しました。",
+    summary: "レビューを共有するWebアプリを、Djangoによるチーム開発で形にしました。",
+    detail: "『モテるための活動』をテーマに、ユーザーがレビューを共有するプラットフォーム型Webアプリです。静的HTMLをDjango上で動くWebアプリへ改修する作業を中心に担当しました。",
+    decision: "既存画面を崩さずテンプレートへ移行し、チーム内で分担された機能と接続できる形に整理しました。",
     role: ["チーム開発", "HTML改修", "Djangoテンプレート対応"],
     technologies: ["Django", "HTML", "CSS"],
-    featured: false,
+    visualVariant: "community",
     links: [{ label: "GitHub", href: "https://github.com/vantan-project/motekatu" }],
   },
   {
     id: "suntory",
-    index: "07",
+    index: "08",
+    chapter: "TEAM / DATABASE",
     title: "INDUSTRY × ACADEMIA",
     titleJa: "産学連携企画",
     category: "DJANGO × DATABASE",
     year: "2024",
-    summary: "サントリーグローバルイノベーションセンターとの産学連携企画で、DB要件定義とバックエンドを担当。",
-    detail: "Djangoを利用したチーム制作で、データベースの要件定義、HTMLのWebアプリ化、バックエンド処理を担当しました。",
+    summary: "企業との産学連携企画で、データベース要件とバックエンドを担当しました。",
+    detail: "サントリーグローバルイノベーションセンターとの産学連携企画です。Djangoを用いたチーム制作で、データベースの要件定義、HTMLのWebアプリ化、バックエンド処理を担当しました。",
+    decision: "画面から必要な情報構造を整理し、チームが実装できるデータベース要件へ落とし込みました。",
     role: ["DB要件定義", "バックエンド", "チーム開発"],
     technologies: ["Django", "Database", "Backend"],
-    featured: false,
+    visualVariant: "collaboration",
     links: [{ label: "GitHub", href: "https://github.com/74616b756d69/TECJUM-teamE_hikariwo" }],
   },
 ];
+
+export const featuredProjects = projects.filter((project) => project.featuredRank !== undefined);
+export const additionalProjects = projects.filter((project) => project.featuredRank === undefined);
