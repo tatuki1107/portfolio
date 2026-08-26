@@ -22,7 +22,7 @@ const HologramScene = dynamic(
   () => import("@/components/hologram-scene").then((module) => module.HologramScene),
   {
     ssr: false,
-    loading: () => <div className="scene-loading">INITIALIZING CORE</div>,
+    loading: () => <div className="scene-loading">立体作品を読み込んでいます</div>,
   },
 );
 
@@ -124,7 +124,7 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
         <button className="panel-close" onClick={onClose} aria-label="詳細を閉じる">
           <X size={22} /><span>CLOSE</span>
         </button>
-        <div className="panel-sequence">CASE FILE / {project.index}</div>
+        <div className="panel-sequence">PROJECT {project.index}</div>
         <p className="eyebrow acid">{project.category}</p>
         <h2 id={`project-title-${project.id}`}>{project.title}</h2>
         <p className="panel-title-ja">{project.titleJa}</p>
@@ -138,12 +138,12 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
               sizes="(max-width: 760px) 100vw, 58vw"
               unoptimized={project.media.endsWith(".gif")}
             />
-            <span className="media-tag">DOCUMENTED OUTPUT</span>
+            <span className="media-tag">PHOTO / DEMO</span>
           </div>
         ) : (
           <div className="panel-media generative-media" aria-hidden="true">
             <div className="signal-disc" />
-            <span className="media-tag">SYSTEM VISUAL / {project.id.toUpperCase()}</span>
+            <span className="media-tag">PROJECT IMAGE / {project.id.toUpperCase()}</span>
           </div>
         )}
 
@@ -198,7 +198,7 @@ export function PortfolioExperience() {
 
       <header className="site-header">
         <a href="#top" className="identity-mark" aria-label="ページ先頭へ">
-          <span>TK</span><small>AR / AI / WEB</small>
+          <span>Tatsuki</span><small>Kuwano / Portfolio</small>
         </a>
         <nav aria-label="メインナビゲーション">
           <a href="#works">WORKS</a><a href="#profile">PROFILE</a><a href="#contact">CONTACT</a>
@@ -219,7 +219,7 @@ export function PortfolioExperience() {
             aria-label={sound.enabled ? "操作音をオフ" : "操作音をオン"}
           >
             {sound.enabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            <span>SOUND {sound.enabled ? "ON" : "OFF"}</span>
+            <span>音 {sound.enabled ? "あり" : "なし"}</span>
           </button>
         </div>
       </header>
@@ -229,29 +229,26 @@ export function PortfolioExperience() {
           <div className="hero-canvas" aria-hidden="true">
             <HologramScene reducedMotion={reducedMotion || scenePaused} compact={compact} />
           </div>
-          <div className="hero-system-copy" aria-hidden="true">
-            <span>CORE: ONLINE</span><span>RENDER: WEBGL</span><span>LOC: JAPAN</span>
-          </div>
           <div className="hero-content">
-            <p className="eyebrow"><span /> CREATIVE DEVELOPER / 2026</p>
+            <p className="eyebrow"><span /> PORTFOLIO / 2026</p>
             <h1><span>TATSUKI</span><span className="outline-word">KUWANO</span></h1>
             <div className="hero-bottom">
               <p className="hero-statement">
                 AR・AI・Webを横断し、<br /><strong>画面の外へ続く体験</strong>をつくる。
               </p>
-              <a href="#works" className="down-link"><span>EXPLORE WORKS</span><ArrowDownRight size={25} /></a>
+              <a href="#works" className="down-link"><span>作品を見る</span><ArrowDownRight size={25} /></a>
             </div>
           </div>
-          <div className="hero-index" aria-hidden="true">001—007 / ARCHIVE</div>
+          <div className="hero-index" aria-hidden="true">KOBE / JAPAN</div>
         </section>
 
         <section className="works-section" id="works">
           <div className="section-heading">
-            <p className="eyebrow acid">SELECTED OUTPUTS</p>
-            <h2>WORK<br />ARCHIVE</h2>
+            <p className="eyebrow acid">SELECTED WORKS</p>
+            <h2>選んだ<br />仕事と実験</h2>
             <p className="section-intro">
               課題から技術を選ぶ。<br />技術から体験を組み立てる。<br />
-              <span>クリックしてケースファイルを開く。</span>
+              <span>それぞれの制作背景と担当領域を紹介します。</span>
             </p>
           </div>
           <div className="project-list">
@@ -272,7 +269,7 @@ export function PortfolioExperience() {
             ))}
           </div>
           <div className="additional-work">
-            <p className="micro-label">ADDITIONAL RECORDS</p>
+            <p className="micro-label">そのほかの制作</p>
             <div>
               {additionalProjects.map((project) => (
                 <button key={project.id} type="button" onClick={() => openProject(project)}>
@@ -285,7 +282,7 @@ export function PortfolioExperience() {
 
         <section className="profile-section" id="profile">
           <div className="profile-lead">
-            <p className="eyebrow acid">PROFILE / SYSTEM OPERATOR</p>
+            <p className="eyebrow acid">PROFILE</p>
             <h2>未知の技術に、<br /><span>まず触れる。</span></h2>
           </div>
           <div className="profile-grid">
@@ -309,11 +306,11 @@ export function PortfolioExperience() {
         </section>
 
         <section className="contact-section" id="contact">
-          <p className="eyebrow">OPEN CHANNEL</p>
-          <h2>LET&apos;S MAKE<br /><span>THE UNSEEN.</span></h2>
+          <p className="eyebrow">CONTACT</p>
+          <h2>一緒に、<br /><span>まだない景色を。</span></h2>
           <p>展示、実験、プロダクト。まだ形のない体験について話しましょう。</p>
           <div className="contact-links">
-            <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={21} />EMAIL ME<ArrowUpRight size={21} /></a>
+            <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={21} />メールを送る<ArrowUpRight size={21} /></a>
             <a href="https://github.com/tatuki1107" target="_blank" rel="noreferrer"><Code2 size={21} />GITHUB<ArrowUpRight size={21} /></a>
           </div>
           <footer>

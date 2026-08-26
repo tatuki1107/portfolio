@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Bebas_Neue, IBM_Plex_Mono, Noto_Sans_JP } from "next/font/google";
+import { Barlow_Condensed, Noto_Sans_JP, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 
-const display = Bebas_Neue({
+const display = Barlow_Condensed({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["500", "600", "700"],
 });
 
 const japanese = Noto_Sans_JP({
@@ -15,10 +15,10 @@ const japanese = Noto_Sans_JP({
   display: "swap",
 });
 
-const mono = IBM_Plex_Mono({
-  variable: "--font-mono",
+const editorial = Shippori_Mincho({
+  variable: "--font-editorial",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["500", "600", "700"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio-dun-nine-27.vercel.app";
@@ -48,13 +48,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#050808",
-  colorScheme: "dark",
+  themeColor: "#f1eee5",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ja" className={`${display.variable} ${japanese.variable} ${mono.variable}`}>
+    <html lang="ja" className={`${display.variable} ${japanese.variable} ${editorial.variable}`}>
       <body>{children}</body>
     </html>
   );
