@@ -179,6 +179,7 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
 
 export function PortfolioExperience() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [hoveredProjectIndex, setHoveredProjectIndex] = useState<number | null>(null);
   const [scenePaused, setScenePaused] = useState(false);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const compact = useMediaQuery("(max-width: 760px), (pointer: coarse)");
@@ -227,11 +228,23 @@ export function PortfolioExperience() {
       <main>
         <section className="hero" id="top">
           <div className="hero-canvas" aria-hidden="true">
-            <HologramScene reducedMotion={reducedMotion || scenePaused} compact={compact} />
+            <HologramScene
+              reducedMotion={reducedMotion || scenePaused}
+              compact={compact}
+              onHoverProject={setHoveredProjectIndex}
+              onSelectProject={(index) => openProject(projects[index])}
+            />
           </div>
           <div className="hero-3d-note" aria-hidden="true">
-            <span>INTERACTIVE 3D OBJECT</span>
-            <strong>DRAG TO ROTATE</strong>
+            <span>INTERACTIVE PROJECT ISLAND</span>
+            <strong>DRAG WORLD / CLICK OBJECTS</strong>
+          </div>
+          <div className="hero-project-callout" aria-live="polite">
+            {hoveredProjectIndex === null ? (
+              <><small>3D PROJECT MAP</small><strong>7つの作品を巡る</strong></>
+            ) : (
+              <><small>PROJECT {projects[hoveredProjectIndex].index}</small><strong>{projects[hoveredProjectIndex].title}</strong></>
+            )}
           </div>
           <div className="hero-content">
             <p className="eyebrow"><span /> PORTFOLIO / 2026</p>

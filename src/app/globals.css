@@ -116,7 +116,7 @@ button { font: inherit; }
   padding: 110px 4vw 42px;
   overflow: hidden;
   border-bottom: 1px solid var(--ink);
-  background: var(--paper);
+  background: #d7d8d2;
 }
 .hero::before {
   content: "01";
@@ -124,7 +124,7 @@ button { font: inherit; }
   z-index: -2;
   top: 6vh;
   right: -1vw;
-  color: rgba(30, 29, 25, .045);
+  color: rgba(30, 29, 25, .035);
   font: 700 48vw/.8 var(--font-display), sans-serif;
   letter-spacing: -.08em;
 }
@@ -141,7 +141,7 @@ button { font: inherit; }
 .hero-canvas {
   position: absolute;
   z-index: 0;
-  inset: 65px -3vw -2vh 38%;
+  inset: 66px 0 0;
   pointer-events: auto;
   cursor: grab;
   touch-action: pan-y;
@@ -180,6 +180,22 @@ button { font: inherit; }
   letter-spacing: .14em;
 }
 .hero-3d-note strong { font-size: 10px; }
+.hero-project-callout {
+  position: absolute;
+  z-index: 4;
+  right: 4vw;
+  bottom: 104px;
+  width: min(310px, 30vw);
+  padding: 13px 15px 14px;
+  color: var(--paper);
+  background: var(--blue);
+  border-left: 5px solid var(--yellow);
+  pointer-events: none;
+}
+.hero-project-callout small,
+.hero-project-callout strong { display: block; }
+.hero-project-callout small { margin-bottom: 5px; font-size: 8px; font-weight: 700; letter-spacing: .15em; }
+.hero-project-callout strong { overflow: hidden; font: 600 20px/1 var(--font-display), sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .eyebrow {
   margin: 0;
   font-size: 9px;
@@ -525,7 +541,7 @@ button { font: inherit; }
 @media (max-width: 900px) {
   .site-header { grid-template-columns: 1fr auto; }
   .site-header nav { display: none; }
-  .hero-canvas { inset: 70px -20% 0 18%; }
+  .hero-canvas { inset: 66px 0 0; }
   .hero h1 { font-size: clamp(6rem, 19vw, 10rem); }
   .section-heading { grid-template-columns: 1fr; }
   .section-heading .eyebrow { grid-column: auto; }
@@ -542,10 +558,12 @@ button { font: inherit; }
   .hero { min-height: 820px; padding: 86px 18px 26px; }
   .hero::after { display: none; }
   .hero::before { top: 15vh; right: -8vw; font-size: 100vw; }
-  .hero-canvas { inset: 145px -55% 115px -20%; opacity: .96; }
-  .hero-3d-note { top: auto; right: 18px; bottom: 154px; }
+  .hero-canvas { inset: 58px 0 0; opacity: 1; }
+  .hero-3d-note { top: 76px; right: 18px; bottom: auto; }
   .hero-3d-note span { display: none; }
   .hero-3d-note strong { font-size: 8px; }
+  .hero-project-callout { right: 18px; bottom: 138px; width: 210px; padding: 10px 12px; }
+  .hero-project-callout strong { font-size: 16px; }
   .hero-content { min-height: 708px; }
   .hero h1 { margin-top: 35px; font-size: clamp(5.2rem, 27vw, 7.5rem); line-height: .75; }
   .hero h1 span:last-child { margin-left: 0; }
