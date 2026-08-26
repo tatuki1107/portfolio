@@ -229,6 +229,10 @@ export function PortfolioExperience() {
           <div className="hero-canvas" aria-hidden="true">
             <HologramScene reducedMotion={reducedMotion || scenePaused} compact={compact} />
           </div>
+          <div className="hero-3d-note" aria-hidden="true">
+            <span>INTERACTIVE 3D OBJECT</span>
+            <strong>DRAG TO ROTATE</strong>
+          </div>
           <div className="hero-content">
             <p className="eyebrow"><span /> PORTFOLIO / 2026</p>
             <h1><span>TATSUKI</span><span className="outline-word">KUWANO</span></h1>

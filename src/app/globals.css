@@ -142,8 +142,11 @@ button { font: inherit; }
   position: absolute;
   z-index: 0;
   inset: 65px -3vw -2vh 38%;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
 }
+.hero-canvas:active { cursor: grabbing; }
 .scene-loading {
   width: 100%;
   height: 100%;
@@ -159,7 +162,24 @@ button { font: inherit; }
   min-height: calc(100svh - 152px);
   display: flex;
   flex-direction: column;
+  pointer-events: none;
 }
+.hero-content a { pointer-events: auto; }
+.hero-3d-note {
+  position: absolute;
+  z-index: 3;
+  top: 96px;
+  right: 4vw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding-right: 12px;
+  border-right: 3px solid var(--red);
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+.hero-3d-note strong { font-size: 10px; }
 .eyebrow {
   margin: 0;
   font-size: 9px;
@@ -523,6 +543,9 @@ button { font: inherit; }
   .hero::after { display: none; }
   .hero::before { top: 15vh; right: -8vw; font-size: 100vw; }
   .hero-canvas { inset: 145px -55% 115px -20%; opacity: .96; }
+  .hero-3d-note { top: auto; right: 18px; bottom: 154px; }
+  .hero-3d-note span { display: none; }
+  .hero-3d-note strong { font-size: 8px; }
   .hero-content { min-height: 708px; }
   .hero h1 { margin-top: 35px; font-size: clamp(5.2rem, 27vw, 7.5rem); line-height: .75; }
   .hero h1 span:last-child { margin-left: 0; }
