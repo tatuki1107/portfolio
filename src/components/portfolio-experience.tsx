@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from "motion/react";
-import { ArrowDown, ArrowUpRight, Code2, Mail, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Mail, Menu, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { additionalProjects, featuredProjects, type Project, projects } from "@/data/projects";
 
@@ -97,19 +97,40 @@ function useInterfaceSound() {
 function ProjectVisual({ project, priority = false }: { project: Project; priority?: boolean }) {
   if (project.media) {
     return (
-      <Image
-        src={project.media}
-        alt={project.mediaAlt ?? project.titleJa}
-        fill
-        priority={priority}
-        sizes="(max-width: 760px) 94vw, 42vw"
-        unoptimized={project.media.endsWith(".gif")}
-      />
+      <div className={`evidence-visual ${project.mediaSecondary ? "evidence-visual-pair" : ""}`}>
+        <figure>
+          <Image
+            src={project.media}
+            alt={project.mediaAlt ?? project.titleJa}
+            fill
+            priority={priority}
+            sizes="(max-width: 760px) 94vw, 42vw"
+            unoptimized={project.media.endsWith(".gif") || project.featuredRank !== undefined}
+          />
+          {project.mediaLabel ? <figcaption>{project.mediaLabel}</figcaption> : null}
+        </figure>
+        {project.mediaSecondary ? (
+          <figure>
+            <Image
+              src={project.mediaSecondary}
+              alt={project.mediaSecondaryAlt ?? project.titleJa}
+              fill
+              priority={priority}
+              sizes="(max-width: 760px) 47vw, 21vw"
+              unoptimized={project.featuredRank !== undefined}
+            />
+            {project.mediaSecondaryLabel ? <figcaption>{project.mediaSecondaryLabel}</figcaption> : null}
+          </figure>
+        ) : null}
+      </div>
     );
   }
   return (
-    <div className={`generated-visual visual-${project.visualVariant}`} aria-hidden="true">
-      <span /><span /><span /><span />
+    <div className="record-visual" role="img" aria-label={`${project.titleJa}の展示実績`}>
+      <span>{project.mediaLabel ?? "VERIFIED RECORD"}</span>
+      <strong>{project.metric}</strong>
+      <p>{project.title}</p>
+      <small>IMAGE NOT PUBLISHED / FACTS ONLY</small>
     </div>
   );
 }
@@ -181,6 +202,9 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
         <p className="panel-ja">{project.titleJa}</p>
         <div className="panel-media"><ProjectVisual project={project} /></div>
         {project.metric ? <strong className="panel-metric">{project.metric}</strong> : null}
+        <div className="project-facts" aria-label="プロジェクト実績">
+          {project.facts.map((fact) => <span key={fact}>{fact}</span>)}
+        </div>
         <div className="panel-copy">
           <div><span>OVERVIEW</span><p>{project.detail}</p></div>
           <div><span>DESIGN DECISION</span><p>{project.decision}</p></div>
@@ -208,7 +232,8 @@ function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
   return (
     <section className="static-cinematic" id="top">
       <div className="static-intro">
-        <p className="system-label">TATSUKI KUWANO / PORTFOLIO 2026</p>
+        <p className="system-label">TATSUKI KUWANO / AR · AI · 3D DEVELOPER</p>
+        <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
         <p>AR・AI・Web・3Dを横断し、画面の外へ続く体験を設計・実装しています。</p>
       </div>
@@ -229,6 +254,8 @@ function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
 
 export function PortfolioExperience() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
   const [activeChapter, setActiveChapter] = useState(-1);
   const [sceneVisible, setSceneVisible] = useState(true);
   const [scenePaused, setScenePaused] = useState(false);
@@ -274,13 +301,22 @@ export function PortfolioExperience() {
   const useStaticExperience = reducedMotion || webGLSupported === false;
   const chapterProject = activeChapter >= 0 && activeChapter < 3 ? featuredProjects[activeChapter] : null;
 
+  const copyEmail = async () => {
+    await navigator.clipboard.writeText("kuwano.t.24kdgn@gmail.com");
+    setEmailCopied(true);
+    window.setTimeout(() => setEmailCopied(false), 1800);
+  };
+
   return (
     <div className="site-shell">
+      {featuredProjects.flatMap((project) => [project.media, project.mediaSecondary]).filter((src): src is string => Boolean(src)).map((src) => (
+        <link key={src} rel="preload" as="image" href={src} />
+      ))}
       <motion.div className="page-progress" style={{ scaleX: pageProgress }} />
       <div className="grain" aria-hidden="true" />
 
       <header className="site-header">
-        <a className="site-id" href="#top" aria-label="ページ先頭へ"><b>TK</b><span>EXPERIENCE ENGINEER</span></a>
+        <a className="site-id" href="#top" aria-label="ページ先頭へ"><b>TK</b><span>TATSUKI KUWANO<small>AR / AI / 3D DEVELOPER</small></span></a>
         <nav aria-label="メインナビゲーション"><a href="#works">WORKS</a><a href="#profile">PROFILE</a><a href="#contact">CONTACT</a></nav>
         <div className="header-controls">
           <button onClick={() => setScenePaused((value) => !value)} aria-label={scenePaused ? "3Dアニメーションを再開" : "3Dアニメーションを停止"}>
@@ -289,8 +325,20 @@ export function PortfolioExperience() {
           <button onClick={toggleSound} aria-label={soundEnabled ? "操作音をオフ" : "操作音をオン"}>
             {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>SOUND</span>
           </button>
+          <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen((value) => !value)} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation" aria-label={mobileMenuOpen ? "メニューを閉じる" : "メニューを開く"}>
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </header>
+      <AnimatePresence>
+        {mobileMenuOpen ? (
+          <motion.nav id="mobile-navigation" className="mobile-nav" aria-label="モバイルナビゲーション" initial={{ y: -18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>
+            <a href="#works" onClick={() => setMobileMenuOpen(false)}><span>01</span>SKIP FACILITY / WORKS</a>
+            <a href="#profile" onClick={() => setMobileMenuOpen(false)}><span>02</span>PROFILE</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)}><span>03</span>CONTACT</a>
+          </motion.nav>
+        ) : null}
+      </AnimatePresence>
 
       <main>
         {useStaticExperience ? (
@@ -318,9 +366,11 @@ export function PortfolioExperience() {
                     {activeChapter === -1 ? (
                       <motion.div className="cinematic-intro" key="intro" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                         <p className="system-label">TATSUKI KUWANO / PORTFOLIO 2026</p>
+                        <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
                         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
                         <p className="intro-copy">AR・AI・Web・3Dを横断し、<br />画面の外へ続く体験を設計・実装しています。</p>
                         <div className="scroll-cue"><ArrowDown size={17} /><span>SCROLL TO ENTER FACILITY</span></div>
+                        <a className="skip-facility" href="#works">SKIP FACILITY <ArrowDown size={15} /></a>
                       </motion.div>
                     ) : chapterProject ? (
                       <motion.article className="chapter-card" key={chapterProject.id} initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}>
@@ -330,9 +380,10 @@ export function PortfolioExperience() {
                           <h3>{chapterProject.titleJa}</h3>
                           <p>{chapterProject.summary}</p>
                           <div className="chapter-spec"><span>{chapterProject.metric}</span><span>{chapterProject.year}</span></div>
+                          <div className="chapter-facts">{chapterProject.facts.map((fact) => <span key={fact}>{fact}</span>)}</div>
                           <button onClick={() => openProject(chapterProject)}>OPEN PROJECT <ArrowUpRight size={16} /></button>
                         </div>
-                        <div className="chapter-media"><ProjectVisual project={chapterProject} priority={activeChapter === 0} /><span>DOCUMENT / {chapterProject.index}</span></div>
+                        <div className="chapter-media"><ProjectVisual project={chapterProject} priority /><span>DOCUMENT / {chapterProject.index}</span></div>
                       </motion.article>
                     ) : (
                       <motion.div className="cinematic-outro" key="outro" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -370,14 +421,17 @@ export function PortfolioExperience() {
         <section className="profile-section" id="profile">
           <div className="profile-heading"><p className="system-label">OPERATOR PROFILE / 2026</p><h2>技術を横断し、<br /><span>体験を最後までつくる。</span></h2></div>
           <div className="profile-grid">
-            <div className="profile-bio"><small>TATSUKI KUWANO</small><h3>桑野 樹希</h3><p>KADOKAWAドワンゴ情報工科学院 大学部所属。ARを軸に、AI、Web、3Dを組み合わせた体験づくりに取り組んでいます。</p><p>個人制作からチーム開発、企業・自治体プロジェクトまで経験。要件定義、バックエンド、管理画面、データ可視化、3D制作を横断します。</p></div>
+            <div className="profile-bio">
+              <div className="profile-portrait"><Image src="/media/profile-portrait.jpg" alt="桑野樹希のプロフィール写真" fill sizes="(max-width: 680px) 100vw, 38vw" /></div>
+              <small>TATSUKI KUWANO</small><h3>桑野 樹希</h3><p>KADOKAWAドワンゴ情報工科学院 大学部所属。ARを軸に、AI、Web、3Dを組み合わせた体験づくりに取り組んでいます。</p><p>個人制作からチーム開発、企業・自治体プロジェクトまで経験。要件定義、バックエンド、管理画面、データ可視化、3D制作を横断します。</p>
+            </div>
             <div className="capabilities">
               {[
-                ["01", "SPATIAL", "AR / 3D / Interactive"],
-                ["02", "INTELLIGENCE", "LLM / Voice / Memory"],
-                ["03", "SYSTEM", "Backend / Database / Docker"],
-                ["04", "INTERFACE", "Web / Dashboard / Data Viz"],
-              ].map(([number, name, detail]) => <div key={number}><span>{number}</span><strong>{name}</strong><small>{detail}</small></div>)}
+                ["01", "SPATIAL", "AR / 3D / Interactive", "PROJECTS 02 · 06"],
+                ["02", "INTELLIGENCE", "LLM / Voice / Memory", "PROJECTS 01 · 03 · 05"],
+                ["03", "SYSTEM", "Backend / Database / Docker", "PROJECTS 01 · 07 · 08"],
+                ["04", "INTERFACE", "Web / Dashboard / Data Viz", "PROJECTS 03 · 04"],
+              ].map(([number, name, detail, related]) => <div key={number}><span>{number}</span><strong>{name}</strong><small>{detail}<a href="#works">{related}</a></small></div>)}
             </div>
           </div>
         </section>
@@ -386,9 +440,15 @@ export function PortfolioExperience() {
           <p className="system-label">OPEN COMMUNICATION CHANNEL</p>
           <h2>まだない体験を、<br /><span>一緒につくる。</span></h2>
           <p>展示、実験、プロダクト。アイデアを実際に触れられるところまで持っていきます。</p>
+          <div className="contact-brief">
+            <div><span>OPEN TO</span><strong>INTERNSHIP / PROJECT</strong></div>
+            <div><span>BASE</span><strong>JAPAN / REMOTE</strong></div>
+            <div><span>FOCUS</span><strong>AR / AI / 3D</strong></div>
+          </div>
           <div className="contact-links">
             <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={20} />メールを送る<ArrowUpRight size={20} /></a>
             <a href="https://github.com/tatuki1107" target="_blank" rel="noreferrer"><Code2 size={20} />GitHubを見る<ArrowUpRight size={20} /></a>
+            <button type="button" onClick={copyEmail}>{emailCopied ? <Check size={20} /> : <Copy size={20} />}{emailCopied ? "コピーしました" : "メールアドレスをコピー"}<span>kuwano.t.24kdgn@gmail.com</span></button>
           </div>
           <footer><span>© 2026 TATSUKI KUWANO</span><span>THREE.JS / NEXT.JS</span><a href="#top">BACK TO TOP ↑</a></footer>
         </section>

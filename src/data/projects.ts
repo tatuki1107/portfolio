@@ -25,7 +25,12 @@ export type Project = {
   technologies: string[];
   metric?: string;
   media?: string;
+  mediaSecondary?: string;
   mediaAlt?: string;
+  mediaSecondaryAlt?: string;
+  mediaLabel?: string;
+  mediaSecondaryLabel?: string;
+  facts: string[];
   visualVariant: ProjectVisual;
   featuredRank?: 1 | 2 | 3;
   links: ProjectLink[];
@@ -48,6 +53,8 @@ export const projects: Project[] = [
     metric: "END-TO-END / SOLO BUILD",
     media: "/media/yui-demo.gif",
     mediaAlt: "文化祭で稼働した3Dモデル対話AI YUIの画面",
+    mediaLabel: "REAL-TIME DEMO",
+    facts: ["SOLO BUILD", "FESTIVAL EXHIBITION", "FULL STACK"],
     visualVariant: "communication",
     featuredRank: 1,
     links: [{ label: "GitHub", href: "https://github.com/tatuki1107/bunkasaichatAI" }],
@@ -66,6 +73,13 @@ export const projects: Project[] = [
     role: ["個人制作", "AR体験設計", "3Dアセット組み込み", "GitHub Pages公開"],
     technologies: ["MindAR.js", "A-Frame", "JavaScript", "glTF / GLB", "Web Camera"],
     metric: "INSTALL-FREE AR",
+    media: "/media/webar-marker.jpg",
+    mediaSecondary: "/media/webar-result.jpg",
+    mediaAlt: "Web ARで読み取るりんごの画像マーカー",
+    mediaSecondaryAlt: "画像認識後に表示される3Dのりんご",
+    mediaLabel: "IMAGE MARKER",
+    mediaSecondaryLabel: "3D RESULT",
+    facts: ["SOLO BUILD", "FESTIVAL EXHIBITION", "GITHUB PAGES"],
     visualVariant: "ar-gate",
     featuredRank: 2,
     links: [
@@ -88,7 +102,12 @@ export const projects: Project[] = [
     technologies: ["Web Application", "AI", "Tourism", "UX"],
     metric: "KOBE CITY PROJECT",
     media: "/media/kobe-01.png",
+    mediaSecondary: "/media/kobe-02.png",
     mediaAlt: "神戸ナイトタイムエコノミーの利用画面",
+    mediaSecondaryAlt: "神戸ナイトタイムエコノミーの提案画面",
+    mediaLabel: "LIVE PRODUCT",
+    mediaSecondaryLabel: "USE CASE",
+    facts: ["KOBE CITY RELATED", "INTERNSHIP", "APP DEVELOPMENT"],
     visualVariant: "night-city",
     featuredRank: 3,
     links: [{ label: "Visit site", href: "https://yorunotobira.com/" }],
@@ -107,6 +126,10 @@ export const projects: Project[] = [
     role: ["管理画面", "CRM分析", "データ可視化", "運用支援機能"],
     technologies: ["Backend", "Dashboard", "Analytics", "CRM"],
     metric: "BUSINESS OPERATIONS",
+    media: "/media/egographica-official.png",
+    mediaAlt: "egoGraphica公式プロダクトビジュアル",
+    mediaLabel: "OFFICIAL PRODUCT",
+    facts: ["COMPANY PROJECT", "ADMIN + CRM", "OPERATIONS"],
     visualVariant: "analytics",
     links: [
       { label: "Official", href: "https://egographica.art/" },
@@ -130,6 +153,8 @@ export const projects: Project[] = [
     metric: "1–2 SEC TO FIRST TOKEN",
     media: "/media/discord-bot.png",
     mediaAlt: "Discord上で動作するローカルLLM搭載Bot",
+    mediaLabel: "CONVERSATION LOG",
+    facts: ["SOLO BUILD", "1–2 SEC", "DUAL MEMORY"],
     visualVariant: "memory",
     links: [],
   },
@@ -146,6 +171,8 @@ export const projects: Project[] = [
     role: ["制作", "体験設計", "展示"],
     technologies: ["XREAL", "AR", "Interactive Experience"],
     metric: "≈40% OF VISITORS",
+    mediaLabel: "EXHIBITION RECORD",
+    facts: ["GRADUATE EXHIBITION", "≈40% VISITORS", "AR GLASSES"],
     visualVariant: "xreal",
     links: [],
   },
@@ -161,7 +188,15 @@ export const projects: Project[] = [
     detail: "『モテるための活動』をテーマに、ユーザーがレビューを共有するプラットフォーム型Webアプリです。静的HTMLをDjango上で動くWebアプリへ改修する作業を中心に担当しました。",
     decision: "既存画面を崩さずテンプレートへ移行し、チーム内で分担された機能と接続できる形に整理しました。",
     role: ["チーム開発", "HTML改修", "Djangoテンプレート対応"],
-    technologies: ["Django", "HTML", "CSS"],
+    technologies: ["Django", "MySQL", "AWS EC2", "Docker", "jQuery", "HTML / CSS"],
+    metric: "8-PERSON TEAM",
+    media: "/media/motekatu-01.png",
+    mediaSecondary: "/media/motekatu-02.png",
+    mediaAlt: "モテ活Webアプリのプロジェクト紹介画面",
+    mediaSecondaryAlt: "モテ活Webアプリの機能紹介画面",
+    mediaLabel: "PROJECT RECORD",
+    mediaSecondaryLabel: "PRODUCT SCREEN",
+    facts: ["8-PERSON TEAM", "1 OF 3 BACKEND", "DJANGO + AWS"],
     visualVariant: "community",
     links: [{ label: "GitHub", href: "https://github.com/vantan-project/motekatu" }],
   },
@@ -177,7 +212,12 @@ export const projects: Project[] = [
     detail: "サントリーグローバルイノベーションセンターとの産学連携企画です。Djangoを用いたチーム制作で、データベースの要件定義、HTMLのWebアプリ化、バックエンド処理を担当しました。",
     decision: "画面から必要な情報構造を整理し、チームが実装できるデータベース要件へ落とし込みました。",
     role: ["DB要件定義", "バックエンド", "チーム開発"],
-    technologies: ["Django", "Database", "Backend"],
+    technologies: ["Django", "MySQL", "JavaScript", "HTML / CSS", "Docker"],
+    metric: "5-PERSON TEAM",
+    media: "/media/hikariwo-lp.png",
+    mediaAlt: "産学連携企画HIKARIWOのランディングページ",
+    mediaLabel: "RELEASED PRODUCT",
+    facts: ["5-PERSON TEAM", "1 OF 2 BACKEND", "REQUIREMENTS → RELEASE"],
     visualVariant: "collaboration",
     links: [{ label: "GitHub", href: "https://github.com/74616b756d69/TECJUM-teamE_hikariwo" }],
   },

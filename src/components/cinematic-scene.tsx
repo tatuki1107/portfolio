@@ -128,24 +128,27 @@ function InteractiveStation({
   children,
   projectIndex,
   onSelect,
+  enabled,
 }: {
   children: ReactNode;
   projectIndex: number;
   onSelect: (index: number) => void;
+  enabled: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const group = useRef<THREE.Group>(null);
-  useCursor(hovered);
+  useCursor(enabled && hovered);
 
   useFrame((_, delta) => {
     if (!group.current) return;
-    const target = hovered ? 1.035 : 1;
+    const target = enabled && hovered ? 1.035 : 1;
     const scale = THREE.MathUtils.lerp(group.current.scale.x, target, 1 - Math.exp(-delta * 9));
     group.current.scale.setScalar(scale);
   });
 
   const select = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    if (!enabled) return;
     onSelect(projectIndex);
   };
 
@@ -154,6 +157,7 @@ function InteractiveStation({
       ref={group}
       onPointerOver={(event) => {
         event.stopPropagation();
+        if (!enabled) return;
         setHovered(true);
       }}
       onPointerOut={() => setHovered(false)}
@@ -162,6 +166,30 @@ function InteractiveStation({
       {children}
     </group>
   );
+}
+
+function ChapterPresence({
+  children,
+  position,
+  active,
+  compact,
+}: {
+  children: ReactNode;
+  position: [number, number, number];
+  active: boolean;
+  compact: boolean;
+}) {
+  const group = useRef<THREE.Group>(null);
+
+  useFrame((_, delta) => {
+    if (!group.current) return;
+    const target = compact && !active ? 0.04 : 1;
+    const scale = THREE.MathUtils.lerp(group.current.scale.x, target, 1 - Math.exp(-delta * 10));
+    group.current.scale.setScalar(scale);
+    group.current.visible = scale > 0.055;
+  });
+
+  return <group ref={group} position={position}>{children}</group>;
 }
 
 function Waveform({ paused, compact }: { paused: boolean; compact: boolean }) {
@@ -190,7 +218,7 @@ function Waveform({ paused, compact }: { paused: boolean; compact: boolean }) {
   );
 }
 
-function YuiStation({ paused, compact, onSelect }: { paused: boolean; compact: boolean; onSelect: (index: number) => void }) {
+function YuiStation({ paused, compact, active, onSelect }: { paused: boolean; compact: boolean; active: boolean; onSelect: (index: number) => void }) {
   const rings = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
     if (!rings.current || paused) return;
@@ -199,8 +227,8 @@ function YuiStation({ paused, compact, onSelect }: { paused: boolean; compact: b
   });
 
   return (
-    <InteractiveStation projectIndex={0} onSelect={onSelect}>
-      <group position={[-1.4, -0.15, -4.1]}>
+    <InteractiveStation projectIndex={0} onSelect={onSelect} enabled={active}>
+      <ChapterPresence position={[-1.4, -0.15, -4.1]} active={active} compact={compact}>
         <mesh castShadow position={[0, 0.12, 0]}>
           <cylinderGeometry args={[1.8, 2.1, 0.34, 16]} />
           <FacilityMaterial color="#242729" metal />
@@ -223,12 +251,12 @@ function YuiStation({ paused, compact, onSelect }: { paused: boolean; compact: b
           <boxGeometry args={[3.2, 0.08, 0.08]} />
           <meshStandardMaterial color={ORANGE} emissive={ORANGE} emissiveIntensity={2} />
         </mesh>
-      </group>
+      </ChapterPresence>
     </InteractiveStation>
   );
 }
 
-function ARStation({ paused, onSelect }: { paused: boolean; onSelect: (index: number) => void }) {
+function ARStation({ paused, compact, active, onSelect }: { paused: boolean; compact: boolean; active: boolean; onSelect: (index: number) => void }) {
   const scanner = useRef<THREE.Mesh>(null);
   const specimen = useRef<THREE.Mesh>(null);
   useFrame((state, delta) => {
@@ -238,8 +266,8 @@ function ARStation({ paused, onSelect }: { paused: boolean; onSelect: (index: nu
   });
 
   return (
-    <InteractiveStation projectIndex={1} onSelect={onSelect}>
-      <group position={[1.25, -0.1, -13.1]}>
+    <InteractiveStation projectIndex={1} onSelect={onSelect} enabled={active}>
+      <ChapterPresence position={[1.25, -0.1, -13.1]} active={active} compact={compact}>
         <mesh castShadow position={[-1.45, 1.5, 0]}><boxGeometry args={[0.32, 3, 0.55]} /><FacilityMaterial color={BONE} /></mesh>
         <mesh castShadow position={[1.45, 1.5, 0]}><boxGeometry args={[0.32, 3, 0.55]} /><FacilityMaterial color={BONE} /></mesh>
         <mesh castShadow position={[0, 3, 0]}><boxGeometry args={[3.2, 0.32, 0.55]} /><FacilityMaterial color={GRAPHITE} metal /></mesh>
@@ -257,7 +285,7 @@ function ARStation({ paused, onSelect }: { paused: boolean; onSelect: (index: nu
           <meshStandardMaterial color="#ece6d7" roughness={0.92} />
         </mesh>
         <pointLight position={[0, 1.5, 1.2]} color={ORANGE} intensity={9} distance={4} />
-      </group>
+      </ChapterPresence>
     </InteractiveStation>
   );
 }
@@ -294,7 +322,7 @@ function CityBlocks({ compact }: { compact: boolean }) {
   );
 }
 
-function KobeStation({ compact, onSelect }: { compact: boolean; onSelect: (index: number) => void }) {
+function KobeStation({ compact, active, onSelect }: { compact: boolean; active: boolean; onSelect: (index: number) => void }) {
   const routePoints = useMemo(
     () => [
       [-2.2, 0.18, 0.8], [-1.45, 0.22, 0.15], [-0.6, 0.2, 0.48], [0.35, 0.22, -0.2], [1.2, 0.2, 0.22], [2.15, 0.2, -0.7],
@@ -303,8 +331,8 @@ function KobeStation({ compact, onSelect }: { compact: boolean; onSelect: (index
   );
 
   return (
-    <InteractiveStation projectIndex={2} onSelect={onSelect}>
-      <group position={[-0.15, -0.12, -22.4]}>
+    <InteractiveStation projectIndex={2} onSelect={onSelect} enabled={active}>
+      <ChapterPresence position={[-0.15, -0.12, -22.4]} active={active} compact={compact}>
         <mesh castShadow receiveShadow position={[0, 0.05, 0]}>
           <boxGeometry args={[5.4, 0.18, 3.7]} />
           <FacilityMaterial color="#777b7b" metal />
@@ -322,7 +350,7 @@ function KobeStation({ compact, onSelect }: { compact: boolean; onSelect: (index
           <FacilityMaterial color={STEEL} metal />
         </mesh>
         <pointLight position={[0, 1.6, 1.2]} color={ORANGE} intensity={15} distance={6} />
-      </group>
+      </ChapterPresence>
     </InteractiveStation>
   );
 }
@@ -352,9 +380,9 @@ function Scene({
         azimuth={[-0.1, 0.1]}
       >
         <group>
-          <YuiStation paused={paused} compact={compact} onSelect={onSelectProject} />
-          <ARStation paused={paused} onSelect={onSelectProject} />
-          <KobeStation compact={compact} onSelect={onSelectProject} />
+          <YuiStation paused={paused} compact={compact} active={activeChapter === 0} onSelect={onSelectProject} />
+          <ARStation paused={paused} compact={compact} active={activeChapter === 1} onSelect={onSelectProject} />
+          <KobeStation compact={compact} active={activeChapter === 2} onSelect={onSelectProject} />
         </group>
       </PresentationControls>
       {!compact ? (
@@ -370,7 +398,7 @@ function Scene({
 export function CinematicScene(props: CinematicSceneProps) {
   return (
     <Canvas
-      shadows={!props.compact}
+      shadows={props.compact ? false : "basic"}
       camera={{ position: [0, 2.2, 12], fov: props.compact ? 48 : 42, near: 0.1, far: 70 }}
       dpr={props.compact ? [1, 1.15] : [1, 1.55]}
       gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
