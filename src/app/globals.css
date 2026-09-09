@@ -333,6 +333,7 @@ button { font: inherit; }
   font-family: var(--font-editorial), serif;
   font-weight: 600;
   letter-spacing: -.075em;
+  white-space: nowrap;
 }
 .works-heading h2 { font-size: clamp(4.8rem, 9.5vw, 9.5rem); line-height: 1; }
 .works-heading p { margin: 0; font-size: .92rem; line-height: 2; }
@@ -482,22 +483,23 @@ button { font: inherit; }
   .static-featured article > h2,
   .static-featured article > p,
   .static-featured button { margin-top: 0; }
+  .static-featured article > h2 { font-size: clamp(2.6rem, 13vw, 4rem); text-wrap: balance; }
   .works-section { padding: 92px 16px 80px; }
   .section-kicker { grid-template-columns: 58px 1fr; }
   .works-heading { grid-template-columns: 1fr; gap: 35px; padding: 65px 0 55px; }
-  .works-heading h2 { font-size: 4.4rem; }
+  .works-heading h2 { font-size: clamp(2.5rem, 11.75vw, 4.4rem); }
   .work-records button { grid-template-columns: 34px 1fr 40px; gap: 10px; min-height: 126px; }
-  .record-title strong { font-size: 2.35rem; }
+  .record-title strong { font-size: clamp(1.875rem, 9vw, 2.35rem); text-wrap: balance; }
   .record-title em { font-size: .66rem; }
   .record-metric { display: none; }
   .profile-section { padding: 92px 16px 0; }
-  .profile-heading h2 { margin-top: 38px; font-size: 4.2rem; }
+  .profile-heading h2 { margin-top: 38px; font-size: clamp(1.5rem, calc(9.2vw - 12px), 4.2rem); }
   .profile-grid { grid-template-columns: 1fr; gap: 55px; margin-top: 64px; padding-bottom: 75px; }
   .profile-portrait { aspect-ratio: 5/4; }
   .capabilities > div { grid-template-columns: 36px 1fr; }
   .capabilities small { grid-column: 2; margin-top: -25px; padding-bottom: 15px; text-align: left; }
   .contact-section { padding: 92px 16px 27px; }
-  .contact-section h2 { margin-top: 38px; font-size: 4.5rem; }
+  .contact-section h2 { margin-top: 38px; font-size: clamp(2.2rem, 10.6vw, 4.5rem); }
   .contact-section > p:not(.system-label) { margin: 40px 0 48px; }
   .contact-brief { grid-template-columns: 1fr; }
   .contact-brief div { min-height: 78px; border-right: 0; border-bottom: 1px solid var(--graphite); }
@@ -509,7 +511,7 @@ button { font: inherit; }
   .contact-section footer { grid-template-columns: 1fr; }
   .project-panel { width: 100vw; padding: 0 16px 50px; border-left: 0; border-top: 6px solid var(--orange); }
   .panel-topline { margin: 0 -16px 55px; padding-left: 16px; }
-  .project-panel h2 { font-size: 3.9rem; }
+  .project-panel h2 { font-size: clamp(2.6rem, 13vw, 3.9rem); text-wrap: balance; }
   .panel-copy { grid-template-columns: 1fr; gap: 38px; }
   .panel-role { grid-template-columns: 1fr; gap: 18px; }
   .panel-role ul { grid-template-columns: 1fr; }
