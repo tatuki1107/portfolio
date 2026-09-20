@@ -317,7 +317,7 @@ function StaticCinematic({ onOpen, onContact }: { onOpen: (project: Project) => 
         <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
         <p>AR・AI・Web・3Dを横断し、画面の外へ続く体験を設計・実装しています。</p>
-        <button type="button" className="static-contact" onClick={onContact}>PROJECT INQUIRY <ArrowUpRight size={17} /></button>
+        <button type="button" className="static-contact" onClick={onContact}>制作・開発を相談する <ArrowUpRight size={17} /></button>
       </div>
       <div className="static-featured">
         {featuredProjects.map((project) => (
@@ -409,8 +409,9 @@ export function PortfolioExperience() {
 
       <header className="site-header">
         <a className="site-id" href="#top" aria-label="桑野樹希のポートフォリオ・ページ先頭へ"><span>TATSUKI KUWANO<small>CREATIVE DEVELOPER · 2026</small></span></a>
-        <nav aria-label="メインナビゲーション"><a href="#works"><span>01</span> WORKS</a><a href="#profile"><span>02</span> PROFILE</a><button type="button" className="header-contact" onClick={openContact}>CONTACT <ArrowUpRight size={14} /></button></nav>
+        <nav aria-label="メインナビゲーション"><a href="#works"><span>01</span> WORKS</a><a href="#profile"><span>02</span> PROFILE</a><button type="button" className="header-contact" onClick={openContact}>お問い合わせ <ArrowUpRight size={14} /></button></nav>
         <div className="header-controls">
+          <button type="button" className="header-contact-mobile" onClick={openContact}>相談する <ArrowUpRight size={14} /></button>
           <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen((value) => !value)} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation" aria-label={mobileMenuOpen ? "メニューを閉じる" : "メニューを開く"}>
             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -421,7 +422,6 @@ export function PortfolioExperience() {
           <motion.nav id="mobile-navigation" className="mobile-nav" aria-label="モバイルナビゲーション" initial={{ y: -18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>
             <a href="#works" onClick={() => setMobileMenuOpen(false)}><span>01</span>SKIP FACILITY / WORKS</a>
             <a href="#profile" onClick={() => setMobileMenuOpen(false)}><span>02</span>PROFILE</a>
-            <button type="button" onClick={openContact}><span>03</span>CONTACT / INQUIRY</button>
           </motion.nav>
         ) : null}
       </AnimatePresence>
@@ -454,7 +454,7 @@ export function PortfolioExperience() {
                         <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
                         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
                         <p className="intro-copy">AR・AI・Web・3Dを横断し、<br />画面の外へ続く体験を設計・実装しています。</p>
-                        <button type="button" className="intro-contact" onClick={openContact}>PROJECT INQUIRY <ArrowUpRight size={16} /></button>
+                        <button type="button" className="intro-contact" onClick={openContact}>制作・開発を相談する <ArrowUpRight size={16} /></button>
                         <div className="scroll-cue"><ArrowDown size={17} /><span>SCROLL TO ENTER FACILITY</span></div>
                         <a className="skip-facility" href="#works">SKIP FACILITY <ArrowDown size={15} /></a>
                       </motion.div>
