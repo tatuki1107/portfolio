@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from "motion/react";
-import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Mail, Menu, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Mail, Menu, Pause, Play, Send, Volume2, VolumeX, X } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { additionalProjects, featuredProjects, type Project, projects } from "@/data/projects";
 
@@ -135,7 +135,7 @@ function ProjectVisual({ project, priority = false }: { project: Project; priori
   );
 }
 
-function ProjectPanel({ project, onClose }: { project: Project; onClose: () => void }) {
+function ProjectPanel({ project, onClose, onContact }: { project: Project; onClose: () => void; onContact: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -223,12 +223,128 @@ function ProjectPanel({ project, onClose }: { project: Project; onClose: () => v
             ))}
           </div>
         ) : null}
+        <button className="panel-contact" type="button" onClick={onContact}>この作品について相談する <ArrowUpRight size={17} /></button>
       </motion.div>
     </motion.div>
   );
 }
 
-function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
+const CONTACT_EMAIL = "kuwano.t.24kdgn@gmail.com";
+const inquiryTypes = ["制作・開発の相談", "インターン・採用", "展示・イベント", "その他"] as const;
+
+function ContactDialog({ onClose }: { onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [inquiry, setInquiry] = useState<(typeof inquiryTypes)[number]>(inquiryTypes[0]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    dialogRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus();
+    };
+  }, [onClose]);
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const composeEmail = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const subject = `【ポートフォリオ】${inquiry} / ${name.trim()}`;
+    const body = [`桑野 樹希 様`, "", message.trim(), "", "──────────", `お名前: ${name.trim()}`, `返信先: ${email.trim()}`, `ご用件: ${inquiry}`].join("\n");
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  return (
+    <motion.div
+      className="contact-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <motion.div
+        ref={dialogRef}
+        className="contact-dialog"
+        initial={{ y: 28, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 28, opacity: 0 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-dialog-title"
+        tabIndex={-1}
+      >
+        <div className="contact-dialog-top"><span>TATSUKI KUWANO / CONTACT</span><button type="button" onClick={onClose} aria-label="問い合わせを閉じる"><X size={18} /><span>閉じる</span></button></div>
+        <div className="contact-dialog-content">
+          <div className="contact-dialog-intro">
+            <p className="contact-eyebrow">ご連絡はこちらから</p>
+            <h2 id="contact-dialog-title">お問い合わせ</h2>
+            <p>制作のご相談、展示のお誘い、採用のお話など。内容が固まっていなくても、まずはお気軽にお聞かせください。</p>
+          </div>
+          <form className="contact-form" onSubmit={composeEmail}>
+            <fieldset>
+              <legend>ご用件</legend>
+              <div className="inquiry-options">
+                {inquiryTypes.map((type) => (
+                  <label key={type} className={inquiry === type ? "selected" : ""}>
+                    <input type="radio" name="inquiry" value={type} checked={inquiry === type} onChange={() => setInquiry(type)} />
+                    {type}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="contact-form-row">
+              <label>お名前<input required maxLength={80} autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="お名前" /></label>
+              <label>返信先メール<input required type="email" maxLength={254} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
+            </div>
+            <label className="contact-message">メッセージ<textarea required minLength={10} maxLength={3000} rows={5} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ご相談内容や背景を教えてください。" /></label>
+            <button className="contact-submit" type="submit"><Send size={17} />メールを作成する<ArrowUpRight size={17} /></button>
+            <p className="contact-form-note">このサイトから自動送信はされません。メールアプリで内容を確認し、送信してください。</p>
+            <div className="contact-form-fallback"><span>メールアプリが開かない場合</span><button type="button" onClick={copyAddress}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "コピーしました" : CONTACT_EMAIL}</button></div>
+          </form>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function StaticCinematic({ onOpen, onContact }: { onOpen: (project: Project) => void; onContact: () => void }) {
   return (
     <section className="static-cinematic" id="top">
       <div className="static-intro">
@@ -236,6 +352,7 @@ function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
         <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
         <p>AR・AI・Web・3Dを横断し、画面の外へ続く体験を設計・実装しています。</p>
+        <button type="button" className="static-contact" onClick={onContact}>PROJECT INQUIRY <ArrowUpRight size={17} /></button>
       </div>
       <div className="static-featured">
         {featuredProjects.map((project) => (
@@ -254,6 +371,7 @@ function StaticCinematic({ onOpen }: { onOpen: (project: Project) => void }) {
 
 export function PortfolioExperience() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
   const [activeChapter, setActiveChapter] = useState(-1);
@@ -272,6 +390,19 @@ export function PortfolioExperience() {
     playSound("open");
     setSelectedProject(project);
   }, [playSound]);
+
+  const openContact = useCallback(() => {
+    setMobileMenuOpen(false);
+    setContactOpen(true);
+  }, []);
+
+  const closeContact = useCallback(() => setContactOpen(false), []);
+  const closeProject = useCallback(() => setSelectedProject(null), []);
+
+  const contactFromProject = useCallback(() => {
+    setSelectedProject(null);
+    window.setTimeout(() => setContactOpen(true), 400);
+  }, []);
 
   useMotionValueEvent(scrollY, "change", (scrollTop) => {
     const cinematic = cinematicRef.current;
@@ -317,7 +448,7 @@ export function PortfolioExperience() {
 
       <header className="site-header">
         <a className="site-id" href="#top" aria-label="ページ先頭へ"><b>TK</b><span>TATSUKI KUWANO<small>AR / AI / 3D DEVELOPER</small></span></a>
-        <nav aria-label="メインナビゲーション"><a href="#works">WORKS</a><a href="#profile">PROFILE</a><a href="#contact">CONTACT</a></nav>
+        <nav aria-label="メインナビゲーション"><a href="#works">WORKS</a><a href="#profile">PROFILE</a><button type="button" className="header-contact" onClick={openContact}>CONTACT <ArrowUpRight size={14} /></button></nav>
         <div className="header-controls">
           <button onClick={() => setScenePaused((value) => !value)} aria-label={scenePaused ? "3Dアニメーションを再開" : "3Dアニメーションを停止"}>
             {scenePaused ? <Play size={15} /> : <Pause size={15} />}
@@ -335,16 +466,16 @@ export function PortfolioExperience() {
           <motion.nav id="mobile-navigation" className="mobile-nav" aria-label="モバイルナビゲーション" initial={{ y: -18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>
             <a href="#works" onClick={() => setMobileMenuOpen(false)}><span>01</span>SKIP FACILITY / WORKS</a>
             <a href="#profile" onClick={() => setMobileMenuOpen(false)}><span>02</span>PROFILE</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)}><span>03</span>CONTACT</a>
+            <button type="button" onClick={openContact}><span>03</span>CONTACT / INQUIRY</button>
           </motion.nav>
         ) : null}
       </AnimatePresence>
 
       <main>
         {useStaticExperience ? (
-          <StaticCinematic onOpen={openProject} />
+          <StaticCinematic onOpen={openProject} onContact={openContact} />
         ) : (
-          <SceneErrorBoundary fallback={<StaticCinematic onOpen={openProject} />}>
+          <SceneErrorBoundary fallback={<StaticCinematic onOpen={openProject} onContact={openContact} />}>
             <section className="cinematic" id="top" ref={cinematicRef}>
               <div className="cinematic-sticky">
                 <div className="cinematic-canvas" aria-hidden="true">
@@ -369,6 +500,7 @@ export function PortfolioExperience() {
                         <div className="intro-identity"><strong>桑野 樹希</strong><span>AR / AI / 3D CREATIVE DEVELOPER</span></div>
                         <h1>BUILDING<br />EXPERIENCE<br /><span>BEYOND SCREENS.</span></h1>
                         <p className="intro-copy">AR・AI・Web・3Dを横断し、<br />画面の外へ続く体験を設計・実装しています。</p>
+                        <button type="button" className="intro-contact" onClick={openContact}>PROJECT INQUIRY <ArrowUpRight size={16} /></button>
                         <div className="scroll-cue"><ArrowDown size={17} /><span>SCROLL TO ENTER FACILITY</span></div>
                         <a className="skip-facility" href="#works">SKIP FACILITY <ArrowDown size={15} /></a>
                       </motion.div>
@@ -446,15 +578,16 @@ export function PortfolioExperience() {
             <div><span>FOCUS</span><strong>AR / AI / 3D</strong></div>
           </div>
           <div className="contact-links">
-            <a href="mailto:kuwano.t.24kdgn@gmail.com"><Mail size={20} />メールを送る<ArrowUpRight size={20} /></a>
+            <button type="button" className="contact-open-button" onClick={openContact}><Mail size={20} />相談内容を送る<ArrowUpRight size={20} /></button>
             <a href="https://github.com/tatuki1107" target="_blank" rel="noreferrer"><Code2 size={20} />GitHubを見る<ArrowUpRight size={20} /></a>
-            <button type="button" onClick={copyEmail}>{emailCopied ? <Check size={20} /> : <Copy size={20} />}{emailCopied ? "コピーしました" : "メールアドレスをコピー"}<span>kuwano.t.24kdgn@gmail.com</span></button>
+            <button type="button" className="contact-copy-button" onClick={copyEmail}>{emailCopied ? <Check size={20} /> : <Copy size={20} />}{emailCopied ? "コピーしました" : "メールアドレスをコピー"}<span>kuwano.t.24kdgn@gmail.com</span></button>
           </div>
           <footer><span>© 2026 TATSUKI KUWANO</span><span>THREE.JS / NEXT.JS</span><a href="#top">BACK TO TOP ↑</a></footer>
         </section>
       </main>
 
-      <AnimatePresence>{selectedProject ? <ProjectPanel project={selectedProject} onClose={() => setSelectedProject(null)} /> : null}</AnimatePresence>
+      <AnimatePresence>{selectedProject ? <ProjectPanel project={selectedProject} onClose={closeProject} onContact={contactFromProject} /> : null}</AnimatePresence>
+      <AnimatePresence>{contactOpen ? <ContactDialog onClose={closeContact} /> : null}</AnimatePresence>
     </div>
   );
 }
