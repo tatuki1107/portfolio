@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from "motion/react";
-import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Mail, Menu, Pause, Play, Send, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, Code2, Copy, Mail, Menu, Send, X } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { additionalProjects, featuredProjects, type Project, projects } from "@/data/projects";
 
@@ -57,41 +57,6 @@ function useWebGLSupport() {
     return () => window.clearTimeout(timer);
   }, []);
   return supported;
-}
-
-function useInterfaceSound() {
-  const [enabled, setEnabled] = useState(false);
-  const contextRef = useRef<AudioContext | null>(null);
-
-  const play = useCallback((kind: "step" | "open") => {
-    const context = contextRef.current;
-    if (!enabled || !context || context.state !== "running") return;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const now = context.currentTime;
-    oscillator.type = kind === "open" ? "triangle" : "sine";
-    oscillator.frequency.setValueAtTime(kind === "open" ? 118 : 510, now);
-    oscillator.frequency.exponentialRampToValueAtTime(kind === "open" ? 238 : 410, now + 0.11);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.028, now + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.15);
-  }, [enabled]);
-
-  const toggle = () => {
-    const next = !enabled;
-    if (next) {
-      const context = contextRef.current ?? new AudioContext();
-      contextRef.current = context;
-      void context.resume();
-    }
-    setEnabled(next);
-  };
-
-  return { enabled, play, toggle };
 }
 
 function ProjectVisual({ project, priority = false }: { project: Project; priority?: boolean }) {
@@ -376,20 +341,17 @@ export function PortfolioExperience() {
   const [emailCopied, setEmailCopied] = useState(false);
   const [activeChapter, setActiveChapter] = useState(-1);
   const [sceneVisible, setSceneVisible] = useState(true);
-  const [scenePaused, setScenePaused] = useState(false);
   const cinematicRef = useRef<HTMLElement>(null);
   const progressRef = useRef(0);
   const compact = useMediaQuery("(max-width: 760px), (pointer: coarse)");
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const webGLSupported = useWebGLSupport();
-  const { enabled: soundEnabled, play: playSound, toggle: toggleSound } = useInterfaceSound();
   const { scrollY, scrollYProgress } = useScroll();
   const pageProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 28 });
 
   const openProject = useCallback((project: Project) => {
-    playSound("open");
     setSelectedProject(project);
-  }, [playSound]);
+  }, []);
 
   const openContact = useCallback(() => {
     setMobileMenuOpen(false);
@@ -413,7 +375,6 @@ export function PortfolioExperience() {
     const next = value < 0.12 ? -1 : value < 0.36 ? 0 : value < 0.61 ? 1 : value < 0.86 ? 2 : 3;
     setActiveChapter((current) => {
       if (current === next) return current;
-      playSound("step");
       return next;
     });
   });
@@ -447,15 +408,9 @@ export function PortfolioExperience() {
       <div className="grain" aria-hidden="true" />
 
       <header className="site-header">
-        <a className="site-id" href="#top" aria-label="ページ先頭へ"><b>TK</b><span>TATSUKI KUWANO<small>AR / AI / 3D DEVELOPER</small></span></a>
-        <nav aria-label="メインナビゲーション"><a href="#works">WORKS</a><a href="#profile">PROFILE</a><button type="button" className="header-contact" onClick={openContact}>CONTACT <ArrowUpRight size={14} /></button></nav>
+        <a className="site-id" href="#top" aria-label="桑野樹希のポートフォリオ・ページ先頭へ"><span>TATSUKI KUWANO<small>CREATIVE DEVELOPER · 2026</small></span></a>
+        <nav aria-label="メインナビゲーション"><a href="#works"><span>01</span> WORKS</a><a href="#profile"><span>02</span> PROFILE</a><button type="button" className="header-contact" onClick={openContact}>CONTACT <ArrowUpRight size={14} /></button></nav>
         <div className="header-controls">
-          <button onClick={() => setScenePaused((value) => !value)} aria-label={scenePaused ? "3Dアニメーションを再開" : "3Dアニメーションを停止"}>
-            {scenePaused ? <Play size={15} /> : <Pause size={15} />}
-          </button>
-          <button onClick={toggleSound} aria-label={soundEnabled ? "操作音をオフ" : "操作音をオン"}>
-            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>SOUND</span>
-          </button>
           <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen((value) => !value)} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation" aria-label={mobileMenuOpen ? "メニューを閉じる" : "メニューを開く"}>
             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -485,7 +440,6 @@ export function PortfolioExperience() {
                       activeChapter={activeChapter}
                       compact={compact}
                       active={sceneVisible}
-                      paused={scenePaused}
                       onSelectProject={(index) => openProject(projects[index])}
                     />
                   ) : <div className="scene-loading"><span />FACILITY LOADING</div>}

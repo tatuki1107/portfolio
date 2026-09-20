@@ -11,7 +11,6 @@ type CinematicSceneProps = {
   activeChapter: number;
   compact: boolean;
   active: boolean;
-  paused: boolean;
   onSelectProject: (index: number) => void;
 };
 
@@ -192,7 +191,7 @@ function ChapterPresence({
   return <group ref={group} position={position}>{children}</group>;
 }
 
-function Waveform({ paused, compact }: { paused: boolean; compact: boolean }) {
+function Waveform({ compact }: { compact: boolean }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const count = compact ? 11 : 19;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -200,7 +199,7 @@ function Waveform({ paused, compact }: { paused: boolean; compact: boolean }) {
   useFrame((state) => {
     if (!mesh.current) return;
     for (let index = 0; index < count; index += 1) {
-      const phase = paused ? 0 : state.clock.elapsedTime * 2.3;
+      const phase = state.clock.elapsedTime * 2.3;
       const height = 0.13 + Math.abs(Math.sin(phase + index * 0.66)) * 0.62;
       dummy.position.set((index - (count - 1) / 2) * 0.13, height / 2, 0);
       dummy.scale.set(1, height, 1);
@@ -218,10 +217,10 @@ function Waveform({ paused, compact }: { paused: boolean; compact: boolean }) {
   );
 }
 
-function YuiStation({ paused, compact, active, onSelect }: { paused: boolean; compact: boolean; active: boolean; onSelect: (index: number) => void }) {
+function YuiStation({ compact, active, onSelect }: { compact: boolean; active: boolean; onSelect: (index: number) => void }) {
   const rings = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
-    if (!rings.current || paused) return;
+    if (!rings.current) return;
     rings.current.rotation.y += delta * 0.35;
     rings.current.rotation.z -= delta * 0.12;
   });
@@ -246,7 +245,7 @@ function YuiStation({ paused, compact, active, onSelect }: { paused: boolean; co
           </mesh>
           <pointLight color={ORANGE} intensity={13} distance={5} />
         </group>
-        <Waveform paused={paused} compact={compact} />
+        <Waveform compact={compact} />
         <mesh position={[0, 2.95, -0.4]}>
           <boxGeometry args={[3.2, 0.08, 0.08]} />
           <meshStandardMaterial color={ORANGE} emissive={ORANGE} emissiveIntensity={2} />
@@ -256,11 +255,10 @@ function YuiStation({ paused, compact, active, onSelect }: { paused: boolean; co
   );
 }
 
-function ARStation({ paused, compact, active, onSelect }: { paused: boolean; compact: boolean; active: boolean; onSelect: (index: number) => void }) {
+function ARStation({ compact, active, onSelect }: { compact: boolean; active: boolean; onSelect: (index: number) => void }) {
   const scanner = useRef<THREE.Mesh>(null);
   const specimen = useRef<THREE.Mesh>(null);
   useFrame((state, delta) => {
-    if (paused) return;
     if (scanner.current) scanner.current.position.y = 0.55 + (Math.sin(state.clock.elapsedTime * 1.25) + 1) * 0.75;
     if (specimen.current) specimen.current.rotation.y += delta * 0.45;
   });
@@ -359,7 +357,6 @@ function Scene({
   progressRef,
   activeChapter,
   compact,
-  paused,
   onSelectProject,
 }: Omit<CinematicSceneProps, "active">) {
   return (
@@ -380,8 +377,8 @@ function Scene({
         azimuth={[-0.1, 0.1]}
       >
         <group>
-          <YuiStation paused={paused} compact={compact} active={activeChapter === 0} onSelect={onSelectProject} />
-          <ARStation paused={paused} compact={compact} active={activeChapter === 1} onSelect={onSelectProject} />
+          <YuiStation compact={compact} active={activeChapter === 0} onSelect={onSelectProject} />
+          <ARStation compact={compact} active={activeChapter === 1} onSelect={onSelectProject} />
           <KobeStation compact={compact} active={activeChapter === 2} onSelect={onSelectProject} />
         </group>
       </PresentationControls>
